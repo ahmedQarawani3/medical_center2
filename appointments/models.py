@@ -1,10 +1,7 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
-from patients.models import Patient  
-from doctors.models import  Doctor 
-from datetime import datetime
+from datetime import datetime, timedelta
+from patients.models import Patient
+from doctors.models import Doctor
 
 class Appointment(models.Model):
     STATUS_CHOICES = [
@@ -15,7 +12,7 @@ class Appointment(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, null=True, blank=True)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     date = models.DateField()   
-    time_slot = models.DateTimeField( auto_now_add=True)  # وقت دقيق
+    time_slot = models.DateTimeField()  # الوقت المحدد بدقة
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='available')
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -23,7 +20,9 @@ class Appointment(models.Model):
         return f"{self.date} {self.time_slot} - {self.doctor}"
 
     def can_cancel_or_reschedule(self):
-        from datetime import datetime, timedelta
+        """
+        يتحقق ما إذا كان يمكن إلغاء أو تعديل الموعد
+        """
         now = datetime.now()
-        appointment_time = datetime.combine(self.date, self.time_slot)
+        appointment_time = datetime.combine(self.date, self.time_slot.time())
         return appointment_time - timedelta(hours=8) > now

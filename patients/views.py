@@ -23,11 +23,11 @@ def patient_details(request, name):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # عرض إشعارات المريض
-@api_view(['GET'])
-def patient_notifications(request, patient_id):
-    notifications = Notification.objects.filter(patient__user_id=patient_id)
-    serializer = NotificationSerializer(notifications, many=True)
-    return Response(serializer.data)
+#@api_view(['GET'])
+#def patient_notifications(request, patient_id):
+   # notifications = Notification.objects.filter(patient__user_id=patient_id)
+   # serializer = NotificationSerializer(notifications, many=True)
+   # return Response(serializer.data)
 
 # إنشاء إشعار تلقائي عند حجز موعد
 @api_view(['POST'])

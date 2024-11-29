@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     patient_details,
-    patient_notifications,
+   # patient_notifications,
     create_appointment_notification,
     create_medication_notification,
     get_notifications,
@@ -13,7 +13,7 @@ from .views import (
 urlpatterns = [
     path('notifications/', get_notifications, name='get_notifications'),
     path('patient/<str:name>/', patient_details, name='patient-details'),
-    path('<int:patient_id>/', patient_notifications, name='patient_notifications'),
+    #path('<int:patient_id>/', patient_notifications, name='patient_notifications'),
     path('create_appointment_notification/<int:appointment_id>/', create_appointment_notification, name='create_appointment_notification'),
     path('create_medication_notification/<int:medication_id>/', create_medication_notification, name='create_medication_notification'),
     
