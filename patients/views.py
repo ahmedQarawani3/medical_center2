@@ -114,3 +114,22 @@ def update_notification(request, notification_id):
         return Response({"message": "Notification updated successfully"}, status=status.HTTP_200_OK)
     except Notification.DoesNotExist:
         return Response({"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND)
+# في ملف views.py ضمن تطبيق المرضى
+
+
+from .models import MedicalRecord
+from .serializers import MedicalRecordSerializer
+from rest_framework.permissions import IsAuthenticated
+
+@api_view(['GET'])
+def medical_record(request):
+    """
+    عرض السجل الطبي للمريض
+    """
+    try:
+        # التأكد من أن المريض المتصل هو نفسه المريض الذي يريد عرض السجل الطبي
+        medical_record = MedicalRecord.objects.get(patient=request.user.patient)
+        serializer = MedicalRecordSerializer(medical_record)
+        return Response(serializer.data)
+    except MedicalRecord.DoesNotExist:
+        return Response({"error": "Medical record not found."}, status=status.HTTP_404_NOT_FOUND)

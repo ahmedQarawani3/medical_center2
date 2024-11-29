@@ -17,10 +17,14 @@ class Patient(models.Model):
 
 
 class MedicalRecord(models.Model):
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
-    diagnosis = models.TextField()
-    recommended_treatment = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    patient = models.OneToOneField('patients.Patient', on_delete=models.CASCADE)
+    diagnosis = models.TextField()  # التشخيص
+    prescribed_treatment = models.TextField()  # العلاج الموصوف
+    created_at = models.DateTimeField(auto_now_add=True)  # تاريخ الإنشاء
+    updated_at = models.DateTimeField(auto_now=True)  # تاريخ آخر تحديث
+
+    def __str__(self):
+        return f"Medical Record for {self.patient.name}"
 
 
 class Notification(models.Model):
