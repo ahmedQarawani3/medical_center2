@@ -1,0 +1,50 @@
+
+###
+POST http://127.0.0.1:8000/server/accounts/register/
+Content-Type: application/json
+
+{
+  "user": {
+    "username": "jsسe",
+    "email": "joshس.doele.com",
+    "password": "secسresw123"
+  },
+  "date_of_birth": "1985-11-10",
+  "phone_number": "9876254210",
+  "name": "Jodhn Doe",
+  "gender": "male",
+  "height": 180,
+  "weight": 75
+}
+###
+
+
+POST http://127.0.0.1:8000/server/accounts/login/
+Content-Type: application/json
+
+{
+  "username": "jswoسe",
+  "password": "secsuسresw123",
+  "role":"patient"
+}
+
+###
+### طلب للحصول على المرضى باسم معين
+GET http://127.0.0.1:8000/server/patients/patient/Jodhn Doe/
+Content-Type: application/json
+
+###
+
+GET http://127.0.0.1:8000/server/patients/notifications/1/
+Content-Type: application/json
+
+
+
+###
+POST http://127.0.0.1:8000/server/patients/create_appointment_notification/1/
+
+Content-Type: application/json
+
+{
+  "appointment_id": 1
+}
