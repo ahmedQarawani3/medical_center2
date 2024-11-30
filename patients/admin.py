@@ -10,5 +10,3 @@ admin.site.register(MedicalRecord)
 from .models import Notification
 admin.site.register(Notification)
 
-from .models import Test
-admin.site.register(Test)

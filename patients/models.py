@@ -46,8 +46,4 @@ class Notification(models.Model):
         self.save()
 
 
-class Test(models.Model):
-    patient = models.ForeignKey('Patient', on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    test_date = models.DateTimeField()
-    description = models.TextField(blank=True, null=True)
+
