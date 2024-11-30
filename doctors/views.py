@@ -6,9 +6,7 @@ from .serializers import DoctorSerializer, DepartmentSerializer
 
 @api_view(['GET'])
 def doctor_list(request):
-    """
-    عرض جميع الأطباء
-    """
+  
     doctors = Doctor.objects.all()
     serializer = DoctorSerializer(doctors, many=True)
     return Response(serializer.data)
