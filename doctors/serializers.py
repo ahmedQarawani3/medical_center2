@@ -4,11 +4,11 @@ from .models import Doctor, Department
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
-        fields = '__all__'
+        fields = ['id', 'name']
 
 class DoctorSerializer(serializers.ModelSerializer):
-    department = DepartmentSerializer()
+    department = serializers.CharField()  # بدلاً من `DepartmentSerializer`
 
     class Meta:
         model = Doctor
-        fields = ['user', 'department', 'biography']
+        fields = ['user', 'department', 'specialization', 'years_of_experience', 'is_active']

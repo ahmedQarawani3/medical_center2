@@ -48,3 +48,47 @@ Content-Type: application/json
 {
   "appointment_id": 1
 }
+
+
+### إنشاء حساب طبيب (Admin Only)
+POST http://127.0.0.1:8000/server/doctors/create/
+Authorization: Bearer d73ff900ef108d0be6fef8e2a53a49ae02ec4193
+Content-Type: application/json
+
+{
+  "user": {
+    "username": "dr.john",
+    "email": "dr.john@example.com",
+    "password": "password123"
+  },
+  "doctor": {
+    "department":"orthopedics", 
+    "specialization": "Cardiology",
+    "years_of_experience": 10,
+    "is_active": true
+  }
+}
+
+---
+
+### تسجيل دخول الطبيب
+POST http://127.0.0.1:8000/server/accounts/login/
+Content-Type: application/json
+
+{
+  "username": "dr.john",
+  "password": "password123",
+  "role": "doctor"
+}
+
+---
+
+### تسجيل خروج الطبيب
+POST http://127.0.0.1:8000/api/accounts/logout/
+Authorization: Bearer <doctor_token>
+Content-Type: application/json
+###
+
+
+GET http://127.0.0.1:8000/server/doctors/create/
+Authorization: Bearer 55640433783fd2f3b683f64953e3e483c0ebb16a
