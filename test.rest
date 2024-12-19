@@ -23,8 +23,8 @@ POST http://127.0.0.1:8000/server/accounts/login/
 Content-Type: application/json
 
 {
-  "username": "jswoسe",
-  "password": "secsuسresw123",
+  "username": "jsسe",
+  "password": "secسresw123",
   "role":"patient"
 }
 
@@ -49,25 +49,25 @@ Content-Type: application/json
   "appointment_id": 1
 }
 
-
-### إنشاء حساب طبيب (Admin Only)
+###
 POST http://127.0.0.1:8000/server/doctors/create/
-Authorization: Bearer d73ff900ef108d0be6fef8e2a53a49ae02ec4193
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM0NjMwNTQ3LCJpYXQiOjE3MzQ2Mjg3NDcsImp0aSI6IjM3YjdjMGNhNDMxYjQ0ZDhiZWZjNDIzMmYyMjE5YzIyIiwidXNlcl9pZCI6N30.2joHRwj5h0qas4R_L8bSmxijyhjq6P4bsEtgpxji6KM
 Content-Type: application/json
 
 {
   "user": {
-    "username": "dr.john",
-    "email": "dr.john@example.com",
-    "password": "password123"
+    "username": "new_doctor",
+    "email": "doctsaor@example.com",
+    "password": "doctor_password"
   },
   "doctor": {
-    "department":"orthopedics", 
-    "specialization": "Cardiology",
-    "years_of_experience": 10,
-    "is_active": true
+    "specialization": "Orthopedics",
+    "years_of_experience": 5,
+    "department": "orthopedics"
   }
 }
+
+
 
 ---
 
