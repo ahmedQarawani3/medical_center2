@@ -2,9 +2,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Appointment
+from billing.models import Payment
 from .serializers import AppointmentSerializer, AppointmentCreateSerializer
-from datetime import datetime, timedelta
+from .models import Appointment
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -25,19 +26,30 @@ def book_appointment(request):
     serializer = AppointmentCreateSerializer(data=data)
     if serializer.is_valid():
         try:
+            # تحقق من إذا كان الدفع قد تم
+            payment = Payment.objects.get(id=data['payment'])
+            if payment.status != 'paid':
+                return Response({"error": "Payment must be completed before booking the appointment."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # تحقق من توفر الفتحة الزمنية
             appointment = Appointment.objects.get(
                 doctor=data['doctor'],
                 date=data['date'],
                 time_slot=data['time_slot'],
                 status='available'
             )
-        except Appointment.DoesNotExist:
-            return Response({"error": "Selected appointment slot is not available."}, status=status.HTTP_404_NOT_FOUND)
+        except (Appointment.DoesNotExist, Payment.DoesNotExist):
+            return Response({"error": "Selected appointment slot or payment is not available."}, status=status.HTTP_404_NOT_FOUND)
 
+        # حجز الموعد
         appointment.patient = request.user.patient
         appointment.status = 'booked'
+        appointment.payment = payment
         appointment.save()
+
         return Response({"message": "Appointment booked successfully."}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
