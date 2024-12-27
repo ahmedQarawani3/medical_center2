@@ -1,0 +1,94 @@
+
+###
+POST http://127.0.0.1:8000/server/accounts/register/
+Content-Type: application/json
+
+{
+  "user": {
+    "username": "jsسe",
+    "email": "joshس.doele.com",
+    "password": "secسresw123"
+  },
+  "date_of_birth": "1985-11-10",
+  "phone_number": "9876254210",
+  "name": "Jodhn Doe",
+  "gender": "male",
+  "height": 180,
+  "weight": 75
+}
+###
+
+
+POST http://127.0.0.1:8000/server/accounts/login/
+Content-Type: application/json
+
+{
+  "username": "jsسe",
+  "password": "secسresw123",
+  "role":"patient"
+}
+
+###
+### طلب للحصول على المرضى باسم معين
+GET http://127.0.0.1:8000/server/patients/patient/Jodhn Doe/
+Content-Type: application/json
+
+###
+
+GET http://127.0.0.1:8000/server/patients/notifications/1/
+Content-Type: application/json
+
+
+
+###
+POST http://127.0.0.1:8000/server/patients/create_appointment_notification/1/
+
+Content-Type: application/json
+
+{
+  "appointment_id": 1
+}
+
+###
+POST http://127.0.0.1:8000/server/doctors/create/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM0NjMwNTQ3LCJpYXQiOjE3MzQ2Mjg3NDcsImp0aSI6IjM3YjdjMGNhNDMxYjQ0ZDhiZWZjNDIzMmYyMjE5YzIyIiwidXNlcl9pZCI6N30.2joHRwj5h0qas4R_L8bSmxijyhjq6P4bsEtgpxji6KM
+Content-Type: application/json
+
+{
+  "user": {
+    "username": "new_doctor",
+    "email": "doctsaor@example.com",
+    "password": "doctor_password"
+  },
+  "doctor": {
+    "specialization": "Orthopedics",
+    "years_of_experience": 5,
+    "department": "orthopedics"
+  }
+}
+
+
+
+---
+
+### تسجيل دخول الطبيب
+POST http://127.0.0.1:8000/server/accounts/login/
+Content-Type: application/json
+
+{
+  "username": "dr.john",
+  "password": "password123",
+  "role": "doctor"
+}
+
+---
+
+### تسجيل خروج الطبيب
+POST http://127.0.0.1:8000/api/accounts/logout/
+Authorization: Bearer <doctor_token>
+Content-Type: application/json
+###
+
+
+GET http://127.0.0.1:8000/server/doctors/create/
+Authorization: Bearer 55640433783fd2f3b683f64953e3e483c0ebb16a
