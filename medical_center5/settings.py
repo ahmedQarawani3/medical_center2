@@ -160,3 +160,5 @@ SIMPLE_JWT = {
 TWILIO_ACCOUNT_SID = ''
 TWILIO_AUTH_TOKEN = ''
 TWILIO_PHONE_NUMBER = '+12185411643'  # رقم Twilio الخاص بك
+
+# settings.py

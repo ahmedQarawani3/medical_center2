@@ -33,12 +33,18 @@ class Department(models.Model):
         return self.get_name_display()
 
 
+from django.db import models
+
 class Doctor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role': 'doctor'})
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
-    specialization = models.CharField(max_length=100)
-    is_active = models.BooleanField(default=True) 
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
+    name = models.CharField(max_length=255)
+    specialty = models.CharField(max_length=255)
+    available_days = models.JSONField(default=list)  # أيام متاحة مثل ['Monday', 'Wednesday', 'Friday']
+    available_times = models.JSONField(default=list)  # أوقات متاحة مثل ['09:00', '14:00']
     years_of_experience = models.PositiveIntegerField(default=0) 
+    
+    def __str__(self):
+        return self.name
 
 
 class AssistantDoctor(models.Model):
@@ -46,4 +52,3 @@ class AssistantDoctor(models.Model):
     patient = models.ForeignKey('patients.Patient', on_delete=models.CASCADE)
     notes = models.TextField()
     status = models.CharField(max_length=20, choices=(('active', 'Active'), ('inactive', 'Inactive')))
-

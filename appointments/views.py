@@ -14,13 +14,18 @@ def list_appointments(request):
     appointments = Appointment.objects.filter(status='available')
     serializer = AppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def book_appointment(request):
     """حجز موعد جديد"""
     if not hasattr(request.user, 'patient'):
         return Response({"error": "Only patients can book appointments."}, status=status.HTTP_403_FORBIDDEN)
+    
+    patient = request.user.patient
+    
+    # التأكد من أن جميع المعلومات الأساسية للمريض تم تعبئتها
+    if not all([patient.name, patient.address, patient.date_of_birth, patient.gender, patient.height, patient.weight]):
+        return Response({"error": "Patient must complete all personal information before booking an appointment."}, status=status.HTTP_400_BAD_REQUEST)
     
     data = request.data
     serializer = AppointmentCreateSerializer(data=data)
@@ -38,6 +43,15 @@ def book_appointment(request):
                 time_slot=data['time_slot'],
                 status='available'
             )
+
+            # التحقق من أن الموعد يقع ضمن الأيام والأوقات المتاحة للدكتور
+            doctor = appointment.doctor
+            if data['date'].strftime('%A').lower() not in [day.lower() for day in doctor.available_days]:
+                return Response({"error": f"Doctor is not available on {data['date'].strftime('%A')}."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if data['time_slot'].strftime('%H:%M') not in doctor.available_times:
+                return Response({"error": f"Doctor is not available at {data['time_slot'].strftime('%H:%M')}."}, status=status.HTTP_400_BAD_REQUEST)
+
         except (Appointment.DoesNotExist, Payment.DoesNotExist):
             return Response({"error": "Selected appointment slot or payment is not available."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -48,6 +62,7 @@ def book_appointment(request):
         appointment.save()
 
         return Response({"message": "Appointment booked successfully."}, status=status.HTTP_201_CREATED)
+    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,15 +1,19 @@
+# billing/models.py
 from django.db import models
 from patients.models import Patient
 
 class Payment(models.Model):
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('failed', 'Failed'),
+    ]
+    
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    date = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=(('pending', 'Pending'), ('paid', 'Paid')))
-    payment_method = models.CharField(max_length=50, choices=(('credit_card', 'Credit Card'), ('paypal', 'PayPal')))
-    transaction_id = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    transaction_id = models.CharField(max_length=255, null=True, blank=True)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    payment_date = models.DateTimeField(null=True, blank=True)
 
-    def complete_payment(self):
-        """تغيير حالة الدفع إلى 'paid' عند إتمام الدفع."""
-        self.status = 'paid'
-        self.save()
+    def __str__(self):
+        return f"Payment {self.status} for {self.patient.name}"
