@@ -158,3 +158,10 @@ SIMPLE_JWT = {
 
 # Twilio settings
 
+# settings.py
+
+STRIPE_TEST_PUBLIC_KEY = 'your-public-key-here'
+STRIPE_TEST_SECRET_KEY = 'your-secret-key-here'
+
+
+
