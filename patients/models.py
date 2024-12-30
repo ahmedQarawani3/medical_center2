@@ -17,7 +17,7 @@ from django.core.exceptions import ValidationError
 from accounts.models import User
 
 class Patient(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient')
     name = models.CharField(max_length=255)
     address = models.TextField(null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)

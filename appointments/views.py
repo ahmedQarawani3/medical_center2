@@ -14,6 +14,14 @@ def list_appointments(request):
     appointments = Appointment.objects.filter(status='available')
     serializer = AppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
+# appointments/views.py
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from billing.models import Payment
+from .serializers import AppointmentCreateSerializer
+from .models import Appointment
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def book_appointment(request):
@@ -27,12 +35,20 @@ def book_appointment(request):
     if not all([patient.name, patient.address, patient.date_of_birth, patient.gender, patient.height, patient.weight]):
         return Response({"error": "Patient must complete all personal information before booking an appointment."}, status=status.HTTP_400_BAD_REQUEST)
     
+    # تحقق من الدفع
+    if not request.data.get('payment_id'):
+        return Response({"error": "Payment ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    payment = Payment.objects.filter(id=request.data['payment_id'], patient=patient).first()
+    if not payment or payment.status != 'paid':
+        return Response({"error": "Payment must be completed before booking the appointment."}, status=status.HTTP_400_BAD_REQUEST)
+    
     data = request.data
     serializer = AppointmentCreateSerializer(data=data)
     if serializer.is_valid():
         try:
             # تحقق من إذا كان الدفع قد تم
-            payment = Payment.objects.get(id=data['payment'])
+            payment = Payment.objects.get(id=data['payment_id'])
             if payment.status != 'paid':
                 return Response({"error": "Payment must be completed before booking the appointment."}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -52,18 +68,19 @@ def book_appointment(request):
             if data['time_slot'].strftime('%H:%M') not in doctor.available_times:
                 return Response({"error": f"Doctor is not available at {data['time_slot'].strftime('%H:%M')}."}, status=status.HTTP_400_BAD_REQUEST)
 
+            # الحجز بعد التحقق من كل شيء
+            appointment.status = 'booked'
+            appointment.patient = patient
+            appointment.save()
+
+            return Response({"message": "Appointment booked successfully."}, status=status.HTTP_201_CREATED)
+
         except (Appointment.DoesNotExist, Payment.DoesNotExist):
             return Response({"error": "Selected appointment slot or payment is not available."}, status=status.HTTP_404_NOT_FOUND)
 
-        # حجز الموعد
-        appointment.patient = request.user.patient
-        appointment.status = 'booked'
-        appointment.payment = payment
-        appointment.save()
-
-        return Response({"message": "Appointment booked successfully."}, status=status.HTTP_201_CREATED)
-    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 from rest_framework.decorators import api_view, permission_classes

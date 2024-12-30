@@ -35,25 +35,26 @@ def register_patient(request):
     phone_number = request.data.get('phone_number')
     password = request.data.get('password')
     name = request.data.get('name')
-    role = 'patient'
+    role = 'patient'  # تعيين الدور كـ patient
 
     if not phone_number or not password or not name:
-        return Response({"detail": "All fields are required."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "All fields (phone_number, password, name) are required."}, status=status.HTTP_400_BAD_REQUEST)
 
     if get_user_model().objects.filter(phone_number=phone_number).exists():
-        return Response({"detail": "Phone number already registered."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "Phone number is already registered. Please use another phone number."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         # إنشاء المستخدم باستخدام رقم الهاتف كـ username
         user = get_user_model().objects.create_user(
-            username=phone_number,  # استخدام رقم الهاتف كـ username
+            username=phone_number,
             phone_number=phone_number,
-            password=password
+            password=password,
+            role=role  # تحديد الدور هنا
         )
 
         # توليد كود التفعيل بشكل عشوائي
         verification_code = str(random.randint(1000, 9999))  # كود عشوائي بين 1000 و 9999
-        send_sms(phone_number, f"Your verification code is {verification_code}")
+        send_sms(phone_number, f"Your verification code is: {verification_code}")
 
         # تخزين الكود مؤقتًا
         confirmation_codes[phone_number] = verification_code
@@ -61,9 +62,10 @@ def register_patient(request):
         # إنشاء ملف تعريف المريض
         Patient.objects.create(user=user, name=name)
 
-        return Response({"detail": "Patient registered successfully."}, status=status.HTTP_201_CREATED)
+        return Response({"detail": "Patient registered successfully. Please confirm your account."}, status=status.HTTP_201_CREATED)
     except Exception as e:
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 from rest_framework import status
@@ -140,16 +142,18 @@ def login_user(request):
 
     # التحقق من الدور
     if user.role != role:
-        return Response({"detail": "Role mismatch."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "Role mismatch. Expected role is '{}', got '{}'.".format(user.role, role)}, status=status.HTTP_400_BAD_REQUEST)
 
     # إنشاء رموز التوثيق
     refresh = RefreshToken.for_user(user)
+    refresh['role'] = user.role  # تضمين الدور في التوكن
     access_token = str(refresh.access_token)
 
     return Response({
         "access": access_token,
         "refresh": str(refresh)
     }, status=status.HTTP_200_OK)
+
 
 
 

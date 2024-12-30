@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Appointment
-from billing.models import Payment  # استيراد Payment من billing.models
 
 class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,9 +9,19 @@ class AppointmentSerializer(serializers.ModelSerializer):
 class AppointmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
-        fields = ['id', 'doctor', 'date', 'time_slot', 'payment']
+        fields = ['doctor', 'date', 'time_slot']
 
     def validate(self, data):
-        if Appointment.objects.filter(doctor=data['doctor'], date=data['date'], time_slot=data['time_slot'], status='booked').exists():
+        # تحقق من أن الموعد غير محجوز
+        if Appointment.objects.filter(
+            doctor=data['doctor'],
+            date=data['date'],
+            time_slot=data['time_slot'],
+            status='booked'
+        ).exists():
             raise serializers.ValidationError("This appointment slot is already booked.")
+        # تحقق من أن التاريخ والوقت ليس في الماضي
+        from datetime import datetime
+        if data['date'] < datetime.now().date():
+            raise serializers.ValidationError("Cannot book an appointment in the past.")
         return data

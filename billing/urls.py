@@ -1,7 +1,8 @@
 # billing/urls.py
 from django.urls import path
-from .views import PaymentView
+from .views import PaymentView, ManualPaymentView
 
 urlpatterns = [
-    path('payments/', PaymentView.as_view(), name='payment-create'),
+    path('payment/', PaymentView.as_view(), name='payment'),
+    path('manual-payment/', ManualPaymentView.as_view(), name='manual_payment'),
 ]

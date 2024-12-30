@@ -6,9 +6,12 @@ class DepartmentSerializer(serializers.ModelSerializer):
         model = Department
         fields = ['id', 'name']
 
-class DoctorSerializer(serializers.ModelSerializer):
-    department = serializers.CharField()  # بدلاً من `DepartmentSerializer`
+# doctors/serializers.py
+from rest_framework import serializers
+from .models import Doctor
 
+class DoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
-        fields = ['user', 'department', 'specialization', 'years_of_experience', 'is_active']
+        fields = ['id', 'user', 'name', 'specialty', 'available_days', 'available_times', 'years_of_experience', 'consultation_fee']
+

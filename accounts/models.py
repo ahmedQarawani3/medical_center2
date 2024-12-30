@@ -4,6 +4,11 @@ from django.db import models
 from django.core.exceptions import ValidationError
 import re
 
+# تعريف الثوابت للأدوار
+ROLE_ADMIN = 'admin'
+ROLE_PATIENT = 'patient'
+ROLE_DOCTOR = 'doctor'
+
 def validate_phone_number(value):
     pattern = re.compile(r'^\+?\d{10,15}$')
     if not pattern.match(value):
@@ -18,7 +23,7 @@ class User(AbstractUser):
             'unique': 'This phone number is already in use.',
         },
     )
-    role = models.CharField(max_length=10, default='patient')
+    role = models.CharField(max_length=10, default=ROLE_PATIENT)
 
     def __str__(self):
         return f"User: {self.phone_number}"
