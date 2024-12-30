@@ -46,15 +46,31 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 
-stripe.api_key = settings.STRIPE_TEST_SECRET_KEY
+# billing/views.py
+import stripe
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Payment
+
+# billing/views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Payment
+from appointments.models import Appointment
+from patients.models import Patient  # تأكد من استيراد نموذج المريض
+stripe.api_key = settings.STRIPE_TEST_SECRET_KEY  # تحديد المفتاح الخاص بـ Stripe من الإعدادات
+
+from decimal import Decimal
 
 class PaymentView(APIView):
-    permission_classes = [IsAuthenticated]  # تأكد من أن المستخدم مسجل الدخول
-
     def post(self, request):
         try:
             if not hasattr(request.user, 'patient'):
                 return Response({"error": "Only patients can make payments."}, status=status.HTTP_403_FORBIDDEN)
+            
             doctor_id = request.data['doctor_id']
             amount = request.data['amount']
             payment_method = request.data['payment_method_id']
@@ -66,8 +82,8 @@ class PaymentView(APIView):
                 payment_method=payment_method,
                 confirm=True,
                 automatic_payment_methods={
-                    'enabled': True,  # تمكين الطرق التلقائية
-                    'allow_redirects': 'never'  # تعطيل التوجيه التلقائي
+                    'enabled': True,
+                    'allow_redirects': 'never'
                 }
             )
 
@@ -79,9 +95,18 @@ class PaymentView(APIView):
                 patient=request.user.patient
             )
 
+            # تحديث رصيد المريض بعد الدفع
+            patient = request.user.patient
+            patient.balance += Decimal(str(amount))  # تحويل المبلغ إلى Decimal قبل إضافته
+            patient.save()
+
             return Response({"clientSecret": intent.client_secret}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 
 
 

@@ -67,3 +67,12 @@ def create_doctor_account(request):
         user.delete()  # حذف المستخدم في حالة وجود خطأ في بيانات الطبيب
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+def doctors_by_department(request, department_id):
+    try:
+        department = Department.objects.get(id=department_id)
+        doctors = Doctor.objects.filter(specialty=department.name)
+        serializer = DoctorSerializer(doctors, many=True)
+        return Response(serializer.data)
+    except Department.DoesNotExist:
+        return Response({"error": "Department not found"}, status=status.HTTP_404_NOT_FOUND)

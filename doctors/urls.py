@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import doctor_list,create_doctor_account
+from .views import doctor_list,create_doctor_account,doctors_by_department
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -14,5 +14,7 @@ urlpatterns = [
     # مساراتك الأخرى
 
     path('create/', create_doctor_account, name='create_doctor_account'),
+    path('departments/<int:department_id>/doctors/', doctors_by_department, name='doctors_by_department'),
+
 
 ]

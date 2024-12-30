@@ -119,3 +119,18 @@ def update_notification(request, notification_id):
         return Response({"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+# patients/views.py
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from patients.models import Patient
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_patient_balance(request):
+    """عرض رصيد المريض"""
+    try:
+        patient = request.user.patient
+        return Response({"balance": patient.balance}, status=status.HTTP_200_OK)
+    except Patient.DoesNotExist:
+        return Response({"error": "Patient not found."}, status=status.HTTP_404_NOT_FOUND)

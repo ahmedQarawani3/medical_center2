@@ -34,51 +34,40 @@ def book_appointment(request):
     # التأكد من أن جميع المعلومات الأساسية للمريض تم تعبئتها
     if not all([patient.name, patient.address, patient.date_of_birth, patient.gender, patient.height, patient.weight]):
         return Response({"error": "Patient must complete all personal information before booking an appointment."}, status=status.HTTP_400_BAD_REQUEST)
-    
     # تحقق من الدفع
-    if not request.data.get('payment_id'):
+    payment_id = request.data.get('payment_id')
+    if not payment_id:
         return Response({"error": "Payment ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        payment = Payment.objects.get(id=payment_id, patient=patient)
+        if payment.status != 'paid':
+            return Response({"error": "Payment must be completed before booking the appointment."}, status=status.HTTP_400_BAD_REQUEST)
+    except Payment.DoesNotExist:
+        return Response({"error": "Invalid payment."}, status=status.HTTP_404_NOT_FOUND)
     
-    payment = Payment.objects.filter(id=request.data['payment_id'], patient=patient).first()
-    if not payment or payment.status != 'paid':
-        return Response({"error": "Payment must be completed before booking the appointment."}, status=status.HTTP_400_BAD_REQUEST)
-    
-    data = request.data
-    serializer = AppointmentCreateSerializer(data=data)
-    if serializer.is_valid():
-        try:
-            # تحقق من إذا كان الدفع قد تم
-            payment = Payment.objects.get(id=data['payment_id'])
-            if payment.status != 'paid':
-                return Response({"error": "Payment must be completed before booking the appointment."}, status=status.HTTP_400_BAD_REQUEST)
-            
-            # تحقق من توفر الفتحة الزمنية
-            appointment = Appointment.objects.get(
-                doctor=data['doctor'],
-                date=data['date'],
-                time_slot=data['time_slot'],
-                status='available'
-            )
+    # تحقق من توافر الموعد
+    doctor_id = request.data.get('doctor_id')
+    date = request.data.get('date')
+    time_slot = request.data.get('time_slot')
 
-            # التحقق من أن الموعد يقع ضمن الأيام والأوقات المتاحة للدكتور
-            doctor = appointment.doctor
-            if data['date'].strftime('%A').lower() not in [day.lower() for day in doctor.available_days]:
-                return Response({"error": f"Doctor is not available on {data['date'].strftime('%A')}."}, status=status.HTTP_400_BAD_REQUEST)
-            
-            if data['time_slot'].strftime('%H:%M') not in doctor.available_times:
-                return Response({"error": f"Doctor is not available at {data['time_slot'].strftime('%H:%M')}."}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        appointment = Appointment.objects.get(
+            doctor_id=doctor_id,
+            date=date,
+            time_slot=time_slot,
+            status='available'
+        )
+    except Appointment.DoesNotExist:
+        return Response({"error": "Selected appointment slot is not available."}, status=status.HTTP_404_NOT_FOUND)
 
-            # الحجز بعد التحقق من كل شيء
-            appointment.status = 'booked'
-            appointment.patient = patient
-            appointment.save()
+    # حجز الموعد
+    appointment.status = 'booked'
+    appointment.patient = patient
+    appointment.save()
 
-            return Response({"message": "Appointment booked successfully."}, status=status.HTTP_201_CREATED)
+    return Response({"message": "Appointment booked successfully."}, status=status.HTTP_201_CREATED)
 
-        except (Appointment.DoesNotExist, Payment.DoesNotExist):
-            return Response({"error": "Selected appointment slot or payment is not available."}, status=status.HTTP_404_NOT_FOUND)
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -135,3 +124,26 @@ def reschedule_appointment(request, appointment_id):
 
         return Response({"message": "Appointment rescheduled successfully."}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from .models import Appointment
+from rest_framework.decorators import api_view
+from doctors.models import Doctor
+@api_view(['GET'])
+def doctor_availability(request, doctor_id):
+    """عرض الأوقات المتاحة للطبيب"""
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+        appointments = Appointment.objects.filter(doctor=doctor)
+        booked_slots = appointments.filter(status='booked').values_list('time_slot', flat=True)
+        
+        available_times = [
+            time for time in doctor.available_times if time not in booked_slots
+        ]
+
+        return Response({
+            "doctor": doctor.name,
+            "available_times": available_times,
+            "booked_slots": list(booked_slots),
+        })
+    except Doctor.DoesNotExist:
+        return Response({"error": "Doctor not found"}, status=status.HTTP_404_NOT_FOUND)
+

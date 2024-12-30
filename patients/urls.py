@@ -9,6 +9,7 @@ from .views import (
     mark_notification_as_read,
     delete_notification,
     update_notification,
+    get_patient_balance,
 )
 
 urlpatterns = [
@@ -20,4 +21,6 @@ urlpatterns = [
     path('notification/read/<int:notification_id>/', mark_notification_as_read, name='mark_notification_as_read'),
     path('notification/delete/<int:notification_id>/', delete_notification, name='delete_notification'),
     path('notification/update/<int:notification_id>/', update_notification, name='update_notification'),
+    path('balance/', get_patient_balance, name='get_patient_balance'),
+
 ]

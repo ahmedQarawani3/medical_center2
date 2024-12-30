@@ -24,6 +24,8 @@ class Patient(models.Model):
     gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female')))
     height = models.FloatField(null=True, blank=True)
     weight = models.FloatField(null=True, blank=True)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # رصيد المريض
+
 
     def save(self, *args, **kwargs):
         if self.height is not None and self.height < 0:
@@ -34,6 +36,10 @@ class Patient(models.Model):
 
     def __str__(self):
         return f"Patient: {self.name}"
+    def is_complete(self):
+        # يمكنك تعديل هذا وفقًا لما تعتبره "معلومات مكتملة"
+        return bool(self.first_name and self.last_name and self.birth_date and self.phone_number and self.address)
+    
 
 
  
