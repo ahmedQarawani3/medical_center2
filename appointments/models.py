@@ -1,7 +1,7 @@
 from django.db import models
 from patients.models import Patient
 from doctors.models import Doctor
-from billing.models import Payment  # تأكد من استيراد Payment من تطبيق billing
+from billing.models import Payment
 
 class Appointment(models.Model):
     STATUS_CHOICES = [
@@ -11,8 +11,8 @@ class Appointment(models.Model):
     
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, null=True, blank=True)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    date = models.DateField()   
-    time_slot = models.DateTimeField(auto_now_add=True)  # وقت دقيق
+    date = models.DateField()
+    time_slot = models.TimeField()  # تعديل الحقل ليكون وقت فقط
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='available')
     created_at = models.DateTimeField(auto_now_add=True)
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE, null=True, blank=True)
@@ -23,7 +23,7 @@ class Appointment(models.Model):
     def can_cancel_or_reschedule(self):
         from datetime import datetime, timedelta
         now = datetime.now()
-        appointment_time = datetime.combine(self.date, self.time_slot)
+        appointment_time = datetime.combine(self.date, datetime.min.time()) + timedelta(hours=self.time_slot.hour, minutes=self.time_slot.minute)
         return appointment_time - timedelta(hours=8) > now
 
     def is_payment_completed(self):

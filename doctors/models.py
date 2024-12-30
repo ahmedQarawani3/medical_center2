@@ -35,16 +35,22 @@ class Department(models.Model):
 
 from django.db import models
 
+# doctors/models.py
+from django.db import models
+from accounts.models import User
+
 class Doctor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor')
     name = models.CharField(max_length=255)
     specialty = models.CharField(max_length=255)
     available_days = models.JSONField(default=list)  # أيام متاحة مثل ['Monday', 'Wednesday', 'Friday']
     available_times = models.JSONField(default=list)  # أوقات متاحة مثل ['09:00', '14:00']
     years_of_experience = models.PositiveIntegerField(default=0) 
-    
+    consultation_fee = models.DecimalField(max_digits=10, decimal_places=2)  # رسوم الاستشارة للطبيب
+
     def __str__(self):
         return self.name
+
 
 
 class AssistantDoctor(models.Model):
