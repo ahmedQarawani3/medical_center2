@@ -2,20 +2,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
-from rest_framework import serializers
-from django.contrib.auth import get_user_model
-
-# accounts/serializers.py
-from rest_framework import serializers
-from django.contrib.auth import get_user_model
-
-
-# accounts/serializers.py
-from rest_framework import serializers
-from django.contrib.auth import get_user_model
-
-from rest_framework import serializers
-from django.contrib.auth import get_user_model
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

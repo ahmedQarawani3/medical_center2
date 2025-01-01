@@ -4,9 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 def send_sms(to_number, message_body):
-    """
-    Sends an SMS to the specified number using Twilio API.
-    """
+
     required_settings = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER']
     for setting in required_settings:
         if not hasattr(settings, setting):

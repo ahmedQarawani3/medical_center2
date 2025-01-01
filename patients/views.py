@@ -2,10 +2,10 @@
 # views.py
 from datetime import timedelta
 from django.utils import timezone
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import status
-
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from .models import Patient, Notification
 from .serializers import PatientSerializer, NotificationSerializer
 from appointments.models import Appointment
@@ -119,11 +119,7 @@ def update_notification(request, notification_id):
         return Response({"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-# patients/views.py
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from patients.models import Patient
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
