@@ -5,37 +5,20 @@ from rest_framework.decorators import api_view
 from django.contrib.auth import get_user_model
 from accounts.serializer import UserRegistrationSerializer
 from accounts.utils import send_sms
+from patients.models import Patient
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 import random
 
-# تخزين رموز التأكيد مؤقتاً
-confirmation_codes = {}
-
-from django.contrib.auth import get_user_model
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from rest_framework import status
-from accounts.utils import send_sms
-from patients.models import Patient
-
-confirmation_codes = {}
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from django.contrib.auth import get_user_model
-from patients.models import Patient
-from patients.serializers import PatientSerializer
-from accounts.utils import send_sms  # يجب التأكد من وجود هذه الدالة لإرسال الرسائل
-
-# تخزين رموز التفعيل مؤقتًا
-confirmation_codes = {}
+from django.core.cache import cache
+import random
 
 @api_view(['POST'])
 def register_patient(request):
     phone_number = request.data.get('phone_number')
     password = request.data.get('password')
     name = request.data.get('name')
-    role = 'patient'  # تعيين الدور كـ patient
+    role = 'patient'
 
     if not phone_number or not password or not name:
         return Response({"detail": "All fields (phone_number, password, name) are required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -44,20 +27,18 @@ def register_patient(request):
         return Response({"detail": "Phone number is already registered. Please use another phone number."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        # إنشاء المستخدم باستخدام رقم الهاتف كـ username
         user = get_user_model().objects.create_user(
             username=phone_number,
             phone_number=phone_number,
             password=password,
-            role=role  # تحديد الدور هنا
+            role=role
         )
-
-        # توليد كود التفعيل بشكل عشوائي
-        verification_code = str(random.randint(1000, 9999))  # كود عشوائي بين 1000 و 9999
+        # توليد كود التفعيل
+        verification_code = str(random.randint(1000, 9999))
         send_sms(phone_number, f"Your verification code is: {verification_code}")
 
-        # تخزين الكود مؤقتًا
-        confirmation_codes[phone_number] = verification_code
+        # تخزين الكود مؤقتًا باستخدام cache
+        cache.set(phone_number, verification_code, timeout=300)  # الكود صالح لمدة 5 دقائق
 
         # إنشاء ملف تعريف المريض
         Patient.objects.create(user=user, name=name)
@@ -67,15 +48,6 @@ def register_patient(request):
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from django.contrib.auth import get_user_model
-
-# تخزين رموز التفعيل مؤقتًا
-confirmation_codes = {}
-
 @api_view(['POST'])
 def confirm_registration(request):
     phone_number = request.data.get('phone_number')
@@ -84,42 +56,29 @@ def confirm_registration(request):
     if not phone_number or not code:
         return Response({"detail": "Phone number and verification code are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # التحقق من وجود رقم الهاتف في رموز التفعيل المؤقتة
-    if phone_number not in confirmation_codes:
+    # التحقق من الكود المخزن في cache
+    cached_code = cache.get(phone_number)
+    if cached_code is None or cached_code != code:
         return Response({"detail": "Invalid phone number or code."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # التحقق من تطابق الكود مع الكود المرسل
-    if confirmation_codes[phone_number] == code:
+    try:
         # العثور على المستخدم وتفعيل الحساب
         user = get_user_model().objects.get(phone_number=phone_number)
-        user.is_active = True  # تفعيل الحساب
+        user.is_active = True
         user.save()
 
-        # مسح الكود من الذاكرة بعد التحقق
-        del confirmation_codes[phone_number]
+        # إزالة الكود من cache بعد التحقق
+        cache.delete(phone_number)
 
         return Response({"message": "Account activated successfully."}, status=status.HTTP_200_OK)
-
-    return Response({"detail": "Invalid confirmation code."}, status=status.HTTP_400_BAD_REQUEST)
-
-
+    except get_user_model().DoesNotExist:
+        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
 
 
-# accounts/views.py
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
 
-from django.contrib.auth import authenticate
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import get_user_model
+
 
 @api_view(['POST'])
 def login_user(request):
@@ -172,13 +131,7 @@ def logout_user(request):
     except Exception as e:
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# accounts/views.py
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-import random
-from django.contrib.auth import get_user_model
-from accounts.utils import send_sms
+
 
 @api_view(['POST'])
 def reset_password(request):

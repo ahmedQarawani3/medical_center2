@@ -1,66 +1,13 @@
-# billing/views.py
-import stripe
-from django.conf import settings
-from django.http import JsonResponse
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Payment
-from appointments.models import Appointment
-from datetime import datetime
-import stripe
-from django.conf import settings
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from .models import Payment
 
-# billing/views.py
 import stripe
 from django.conf import settings
-from django.http import JsonResponse
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Payment
-from appointments.models import Appointment
-# billing/views.py
-import stripe
-from django.conf import settings
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
-# billing/views.py
-import stripe
-from django.conf import settings
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
-# billing/views.py
-import stripe
-from django.conf import settings
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-
-
-# billing/views.py
-import stripe
-from django.conf import settings
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Payment
-
-# billing/views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Payment
 from appointments.models import Appointment
 from patients.models import Patient  # تأكد من استيراد نموذج المريض
+
 stripe.api_key = settings.STRIPE_TEST_SECRET_KEY  # تحديد المفتاح الخاص بـ Stripe من الإعدادات
 
 from decimal import Decimal
@@ -110,9 +57,6 @@ class PaymentView(APIView):
 
 
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from .models import Payment
 
 class ManualPaymentView(APIView):
     def post(self, request):

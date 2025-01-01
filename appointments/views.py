@@ -1,12 +1,14 @@
+
+from billing.models import Payment
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from billing.models import Payment
 from .serializers import AppointmentSerializer, AppointmentCreateSerializer
+from datetime import datetime, timedelta
+from rest_framework.permissions import IsAdminUser 
 from .models import Appointment
-
-
+from doctors.models import Doctor
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_appointments(request):
@@ -14,13 +16,7 @@ def list_appointments(request):
     appointments = Appointment.objects.filter(status='available')
     serializer = AppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
-# appointments/views.py
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from billing.models import Payment
-from .serializers import AppointmentCreateSerializer
-from .models import Appointment
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -72,14 +68,7 @@ def book_appointment(request):
 
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Appointment
-from .serializers import AppointmentSerializer, AppointmentCreateSerializer
-from datetime import datetime, timedelta
-from rest_framework.permissions import IsAdminUser  # استيراد صلاحية الإدارة
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -124,9 +113,7 @@ def reschedule_appointment(request, appointment_id):
 
         return Response({"message": "Appointment rescheduled successfully."}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-from .models import Appointment
-from rest_framework.decorators import api_view
-from doctors.models import Doctor
+
 @api_view(['GET'])
 def doctor_availability(request, doctor_id):
     """عرض الأوقات المتاحة للطبيب"""

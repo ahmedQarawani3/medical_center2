@@ -14,6 +14,12 @@ def validate_phone_number(value):
     if not pattern.match(value):
         raise ValidationError('Phone number must be in the format +1234567890.')
 
+ROLE_CHOICES = [
+    ('admin', 'Admin'),
+    ('patient', 'Patient'),
+    ('doctor', 'Doctor'),
+]
+
 class User(AbstractUser):
     phone_number = models.CharField(
         max_length=15,
@@ -23,7 +29,8 @@ class User(AbstractUser):
             'unique': 'This phone number is already in use.',
         },
     )
-    role = models.CharField(max_length=10, default=ROLE_PATIENT)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='patient')
 
     def __str__(self):
         return f"User: {self.phone_number}"
+
