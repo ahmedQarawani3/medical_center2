@@ -1,70 +1,55 @@
-
-import stripe
-from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Payment
-from appointments.models import Appointment
-from patients.models import Patient  # تأكد من استيراد نموذج المريض
+from django.shortcuts import get_object_or_404
+from .models import TemporaryBooking, Booking
+import stripe
+from django.conf import settings
 
-stripe.api_key = settings.STRIPE_TEST_SECRET_KEY  # تحديد المفتاح الخاص بـ Stripe من الإعدادات
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
-from decimal import Decimal
+class CreatePaymentIntentAPI(APIView):
+    def post(self, request, booking_id):
+        # جلب الحجز المؤقت
+        booking = get_object_or_404(TemporaryBooking, id=booking_id)
 
-class PaymentView(APIView):
-    def post(self, request):
         try:
-            if not hasattr(request.user, 'patient'):
-                return Response({"error": "Only patients can make payments."}, status=status.HTTP_403_FORBIDDEN)
-            
-            doctor_id = request.data['doctor_id']
-            amount = request.data['amount']
-            payment_method = request.data['payment_method_id']
-
-            # إنشاء PaymentIntent مع تمكين automatic_payment_methods
-            intent = stripe.PaymentIntent.create(
-                amount=int(float(amount) * 100),  # تحويل إلى سنتات
-                currency="usd",
-                payment_method=payment_method,
-                confirm=True,
-                automatic_payment_methods={
-                    'enabled': True,
-                    'allow_redirects': 'never'
-                }
+            # إنشاء طلب دفع عبر Stripe
+            payment_intent = stripe.PaymentIntent.create(
+                amount=int(booking.amount_due * 100),  # تحويل المبلغ إلى سنت
+                currency='usd',
+                metadata={'booking_id': booking.id}
             )
+            return Response({
+                'clientSecret': payment_intent.client_secret
+            }, status=status.HTTP_200_OK)
+        except stripe.error.StripeError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            # حفظ الدفع
-            payment = Payment.objects.create(
-                amount=float(amount),
-                status='paid',
-                transaction_id=intent.id,
-                patient=request.user.patient
-            )
-
-            # تحديث رصيد المريض بعد الدفع
-            patient = request.user.patient
-            patient.balance += Decimal(str(amount))  # تحويل المبلغ إلى Decimal قبل إضافته
-            patient.save()
-
-            return Response({"clientSecret": intent.client_secret}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-
-
-
-
-class ManualPaymentView(APIView):
+class ConfirmPaymentAPI(APIView):
     def post(self, request):
-        payment = Payment.objects.create(
-            amount=request.data['amount'],
-            status='paid',  # تعيين الحالة كمدفوع
-            patient=request.data['patient_id'],
-            transaction_id=request.data['transaction_id'],
-            payment_date=request.data['payment_date']
-        )
-        return Response({"message": "Payment updated successfully."}, status=200)
+        payment_intent_id = request.data.get('payment_intent_id')
+        booking_id = request.data.get('booking_id')
+
+        try:
+            # جلب الدفع المؤقت
+            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+            booking = get_object_or_404(TemporaryBooking, id=booking_id)
+
+            if payment_intent.status == 'succeeded':
+                # تحديث حالة الحجز إلى "مدفوع"
+                booking.status = 'paid'
+                booking.save()
+
+                # إنشاء حجز مؤكد في النظام
+                confirmed_booking = Booking.objects.create(
+                    patient=booking.patient,
+                    doctor=booking.doctor,
+                    appointment_time=booking.appointment_time,
+                    amount_due=booking.amount_due
+                )
+                return Response({'message': 'Payment successful, booking confirmed'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Payment failed'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

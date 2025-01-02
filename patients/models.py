@@ -16,6 +16,9 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from accounts.models import User
 
+from django.db import models
+from accounts.models import User
+
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient')
     name = models.CharField(max_length=255)
@@ -24,7 +27,11 @@ class Patient(models.Model):
     gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female')))
     height = models.FloatField(null=True, blank=True)
     weight = models.FloatField(null=True, blank=True)
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # رصيد المريض
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return f"Patient: {self.name}"
+
 
 
     def save(self, *args, **kwargs):

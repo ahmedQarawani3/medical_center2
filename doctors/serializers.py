@@ -14,4 +14,3 @@ class DoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
         fields = ['id', 'user', 'name', 'specialty', 'available_days', 'available_times', 'years_of_experience', 'consultation_fee']
-
