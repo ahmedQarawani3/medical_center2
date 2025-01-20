@@ -1,0 +1,24 @@
+from rest_framework import serializers
+from .models import Doctor, Department
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ['id', 'name']
+
+# doctors/serializers.py
+from rest_framework import serializers
+from .models import Doctor
+
+class DoctorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Doctor
+        fields = ['id', 'user', 'name', 'specialty', 'available_days', 'available_times', 'years_of_experience', 'consultation_fee']
+
+from rest_framework import serializers
+from .models import DoctorAvailability
+
+class DoctorAvailabilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DoctorAvailability
+        fields = ['doctor', 'day', 'start_time', 'end_time']

@@ -4,10 +4,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 import re
 
-# تعريف الثوابت للأدوار
-ROLE_ADMIN = 'admin'
-ROLE_PATIENT = 'patient'
-ROLE_DOCTOR = 'doctor'
 
 def validate_phone_number(value):
     pattern = re.compile(r'^\+?\d{10,15}$')
