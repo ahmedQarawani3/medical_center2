@@ -1,0 +1,144 @@
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+from accounts.models import User
+from appointments.models import Appointment
+from datetime import datetime, timedelta
+from rest_framework.views import APIView
+from .serializers import DoctorSerializer
+from .models import Doctor, Availability
+from .serializers import AvailabilitySerializer
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Department
+from .serializers import DepartmentSerializer
+
+class DoctorListView(APIView):
+    def get(self, request):
+        doctors = Doctor.objects.all()  
+        serializer = DoctorSerializer(doctors, many=True)  
+        return Response(serializer.data, status=status.HTTP_200_OK)
+ 
+
+
+class create_doctor_account(APIView):
+    def post(self, request):
+        if not request.user.is_staff:
+            return Response({"error": "You do not have permission to create a doctor account."}, status=status.HTTP_403_FORBIDDEN)
+
+        user_data = request.data.get("user")
+        doctor_data = request.data.get("doctor")
+        availabilities_data = request.data.get("availabilities")
+
+        if not user_data or not doctor_data or not availabilities_data:
+            return Response({"error": "User, Doctor, and Availabilities data are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(username=user_data["username"]).exists():
+            return Response({"error": "Username already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(phone_number=user_data["phone_number"]).exists():
+            return Response({"error": "Phone number already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.create_user(
+                username=user_data["username"],
+                email=user_data["email"],
+                password=user_data["password"],
+                phone_number=user_data["phone_number"]
+            )
+            user.role = 'doctor' 
+            user.save()
+
+            doctor = Doctor.objects.create(
+                user=user,
+                name=doctor_data["name"],
+                specialty=doctor_data["specialty"],
+                years_of_experience=doctor_data["years_of_experience"],
+                consultation_fee=doctor_data["consultation_fee"],
+                department=doctor_data["department"],
+            )
+
+            for availability in availabilities_data:
+                day = availability["day"]
+                start_time = datetime.strptime(availability["start_time"], '%H:%M:%S').time()
+                end_time = datetime.strptime(availability["end_time"], '%H:%M:%S').time()
+
+                availability_obj = Availability.objects.create(
+                    doctor=doctor,
+                    day=day,
+                    start_time=start_time,
+                    end_time=end_time
+                )
+
+                current_time = datetime.combine(datetime.now(), start_time)
+                end_datetime = datetime.combine(datetime.now(), end_time)
+
+                while current_time.time() < end_datetime.time():
+                    Appointment.objects.create(
+                        doctor=doctor,
+                        date=current_time.date(),
+                        time_slot=current_time.time(),
+                        status="available"
+                    )
+                    current_time += timedelta(minutes=30)
+
+            serializer = DoctorSerializer(doctor)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def list_departments(request):
+    departments = Department.objects.all()
+    
+    # إذا لم توجد أي أقسام في قاعدة البيانات
+    if not departments:
+        return Response({"detail": "No departments found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    # استخدام الـ Serializer لتحويل الأقسام إلى JSON
+    serializer = DepartmentSerializer(departments, many=True)
+    
+    # إرجاع الأقسام بشكل JSON
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+ 
+# views.py
+
+
+
+@api_view(['GET'])
+def list_doctors_by_department(request, department_name):
+    # البحث عن الأطباء حسب القسم
+    doctors = Doctor.objects.filter(department=department_name)
+    
+    # إذا لم توجد أي أطباء في هذا القسم
+    if not doctors:
+        return Response({"detail": "No doctors found in this department."}, status=status.HTTP_404_NOT_FOUND)
+    
+    # استخدام الـ Serializer لتحويل الأطباء إلى JSON
+    serializer = DoctorSerializer(doctors, many=True)
+    
+    # إرجاع الأطباء بشكل JSON
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+@api_view(['GET'])
+def get_doctor_availabilities(request, doctor_id):
+    """
+    عرض مواعيد التوافر الخاصة بالطبيب
+    """
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        return Response({"detail": "Doctor not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    # جلب مواعيد التوافر للطبيب
+    availabilities = Availability.objects.filter(doctor=doctor)
+
+    # تفعيل السيرياليزر لتحويل البيانات إلى JSON
+    availability_serializer = AvailabilitySerializer(availabilities, many=True)
+
+    return Response(availability_serializer.data, status=status.HTTP_200_OK)
