@@ -9,10 +9,14 @@ class PatientSerializer(serializers.ModelSerializer):
         fields = ['user', 'name', 'address', 'phone_number', 'date_of_birth', 'gender', 'height', 'weight']
 
 
+from rest_framework import serializers
+from .models import Notification
+
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = ['id', 'patient', 'notification_type', 'message', 'notification_date', 'created_at', 'read']
+        fields = '__all__'
+
 
 
 

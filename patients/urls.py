@@ -1,30 +1,19 @@
 # urls.py
 from django.urls import path
 from .views import UpdatePatientProfileView
+from .views import CreateNotificationView, ListNotificationsView
 
 from .views import (
     patient_details,
-    patient_notifications,
-    create_appointment_notification,
-    create_medication_notification,
-    get_notifications,
-    mark_notification_as_read,
-    delete_notification,
-    update_notification,
-    get_patient_balance,
+
+
     
 )
 
 urlpatterns = [
-    path('notifications/', get_notifications, name='get_notifications'),
     path('patient/details/<str:name>/', patient_details, name='patient_details'),
-    path('patient/<int:patient_id>/notifications/', patient_notifications, name='patient_notifications'),
-    path('notification/create/appointment/<int:appointment_id>/', create_appointment_notification, name='create_appointment_notification'),
-    path('notification/create/medication/<int:medication_id>/', create_medication_notification, name='create_medication_notification'),
-    path('notification/read/<int:notification_id>/', mark_notification_as_read, name='mark_notification_as_read'),
-    path('notification/delete/<int:notification_id>/', delete_notification, name='delete_notification'),
-    path('notification/update/<int:notification_id>/', update_notification, name='update_notification'),
-    path('balance/', get_patient_balance, name='get_patient_balance'),
+    path('create/', CreateNotificationView.as_view(), name='create-notification'),  # إضافة إشعار (Admin فقط)
+    path('list/', ListNotificationsView.as_view(), name='list-notifications'),  # عرض جميع الإشعارات (للمرضى)
     path('profile/', UpdatePatientProfileView.as_view(), name='update-patient-profile'),
 
 

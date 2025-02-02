@@ -21,113 +21,63 @@ def patient_details(request, name):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['GET'])
-def patient_notifications(request, patient_id):
-    try:
-        notifications = Notification.objects.filter(patient__user_id=patient_id).order_by('-notification_date')
-        serializer = NotificationSerializer(notifications, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from .models import Notification
+from .serializers import NotificationSerializer
 
-@api_view(['POST'])
-def create_appointment_notification(request, appointment_id):
-    try:
-        appointment = Appointment.objects.get(id=appointment_id)
-        patient = appointment.patient
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Notification
+from .serializers import NotificationSerializer
 
-        notification_time = appointment.date - timedelta(days=1)
-        message = f"Reminder: You have an appointment with Dr. {appointment.doctor.name} on {appointment.date}."
+class CreateNotificationView(APIView):
+    permission_classes = [IsAuthenticated]  # تأكد من أن المستخدم مسجل دخول
 
-        notification = Notification.objects.create(
-            patient=patient,
-            notification_type='appointment',
-            message=message,
-            notification_date=notification_time,
-        )
-
-        return Response({"message": "Notification created."}, status=status.HTTP_201_CREATED)
-    except Appointment.DoesNotExist:
-        return Response({"error": "Appointment not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-@api_view(['POST'])
-def create_medication_notification(request, medication_id):
-    try:
-        medication = Medication.objects.get(id=medication_id)
-        patient = medication.patient
-
-        notification_time = timezone.now()
-        message = f"Reminder: It's time to take your medication {medication.name}."
+    def post(self, request):
+        # التحقق من أن المستخدم هو المسؤول (Admin)
+        if not request.user.is_staff:
+            return Response({"error": "You do not have permission to create notifications."}, status=status.HTTP_403_FORBIDDEN)
+        
+        # متابعة تنفيذ الكود لإنشاء الإشعار إذا كانت الصلاحية صحيحة
+        title = request.data.get("title")
+        message = request.data.get("message")
+        expiry_date = request.data.get("expiry_date")
+        
+        if not title or not message or not expiry_date:
+            return Response({"error": "All fields are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         notification = Notification.objects.create(
-            patient=patient,
-            notification_type='medication',
+            title=title,
             message=message,
-            notification_date=notification_time,
+            expiry_date=expiry_date,
         )
+
         serializer = NotificationSerializer(notification)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    except Medication.DoesNotExist:
-        return Response({"error": "Medication not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['GET'])
-def get_notifications(request):
-    try:
-        patient = request.user
-        notifications = Notification.objects.filter(patient=patient).order_by('-notification_date')
+from django.utils import timezone
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from .models import Notification
+from .serializers import NotificationSerializer
+
+class ListNotificationsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        notifications = Notification.objects.active().order_by('-created_at')  # جلب فقط الإشعارات النشطة
         serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-@api_view(['POST'])
-def mark_notification_as_read(request, notification_id):
-    try:
-        notification = Notification.objects.get(id=notification_id)
-        notification.mark_as_read()
-        return Response({"message": "Notification marked as read"}, status=status.HTTP_200_OK)
-    except Notification.DoesNotExist:
-        return Response({"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-@api_view(['DELETE'])
-def delete_notification(request, notification_id):
-    try:
-        notification = Notification.objects.get(id=notification_id)
-        notification.delete()
-        return Response({"message": "Notification deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-    except Notification.DoesNotExist:
-        return Response({"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-@api_view(['PUT'])
-def update_notification(request, notification_id):
-    try:
-        notification = Notification.objects.get(id=notification_id)
-        notification.message = request.data.get('message', notification.message)
-        notification.notification_type = request.data.get('notification_type', notification.notification_type)
-        notification.save()
-        return Response({"message": "Notification updated successfully"}, status=status.HTTP_200_OK)
-    except Notification.DoesNotExist:
-        return Response({"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_patient_balance(request):
-    try:
-        patient = request.user.patient
-        return Response({"balance": patient.balance}, status=status.HTTP_200_OK)
-    except Patient.DoesNotExist:
-        return Response({"error": "Patient not found."}, status=status.HTTP_404_NOT_FOUND)
+
 
 
 class UpdatePatientProfileView(APIView):

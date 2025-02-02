@@ -31,6 +31,10 @@ class Patient(models.Model):
 
 
  
+
+
+
+
 class MedicalRecord(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     diagnosis = models.TextField()

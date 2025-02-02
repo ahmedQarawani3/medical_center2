@@ -16,6 +16,8 @@ class Patient(models.Model):
     allergies = models.TextField(null=True, blank=True, verbose_name="Allergies") 
     past_surgeries = models.TextField(null=True, blank=True, verbose_name="Past Surgeries")  
 
+
+
     def save(self, *args, **kwargs):
         if self.height is not None and self.height < 0:
             raise ValidationError('Height cannot be negative.')
@@ -31,6 +33,10 @@ class Patient(models.Model):
 
 
  
+
+
+
+
 class MedicalRecord(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     diagnosis = models.TextField()
@@ -87,6 +93,11 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.title
+
+
+
+
+
 
 
 # patients/models.py (continued)

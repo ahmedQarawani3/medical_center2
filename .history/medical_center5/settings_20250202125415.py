@@ -48,8 +48,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework_simplejwt',  # لدعم JWT
-        'django_extensions',
-
 
 
     
@@ -176,14 +174,7 @@ TWILIO_PHONE_NUMBER = '+12185411643'  # رقم Twilio
 STRIPE_TEST_SECRET_KEY='sk_test_51QajobHPJbUuZ7Goa0bjbzsoKFq7Z8sVQESWGZnK6G852uHZnNef1fXi3We9cUAhjAQl3brVfbOxMDHvx2MlWtbg00OUtvv4lC' 
 
 
-
 GRAPH_MODELS = {
   'all_applications': True,
   'group_models': True,
 }
-
-GRAPH_MODELS = {
-  'app_labels': ["doctors", "patients", "billing"],
-}
-
-

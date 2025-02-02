@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Department
 from .serializers import DepartmentSerializer
-
+#عرض كل الدكاتره
 class DoctorListView(APIView):
     def get(self, request):
         doctors = Doctor.objects.all()  
@@ -19,7 +19,7 @@ class DoctorListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
  
 
-
+#انشاء دكتور
 class create_doctor_account(APIView):
     def post(self, request):
         if not request.user.is_staff:
@@ -43,10 +43,11 @@ class create_doctor_account(APIView):
                 username=user_data["username"],
                 email=user_data["email"],
                 password=user_data["password"],
-                phone_number=user_data["phone_number"]
+                phone_number=user_data["phone_number"],
+                role='doctor'  # تعيين الدور مباشرة
             )
-            user.role = 'doctor' 
             user.save()
+
 
             doctor = Doctor.objects.create(
                 user=user,
@@ -86,7 +87,7 @@ class create_doctor_account(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+#عرض الاقسام 
 @api_view(['GET'])
 def list_departments(request):
     departments = Department.objects.all()
@@ -98,7 +99,7 @@ def list_departments(request):
     
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+#عرض الدكاتره حسب القسم الخاص به
 @api_view(['GET'])
 def list_doctors_by_department(request, department_name):
     doctors = Doctor.objects.filter(department=department_name)
@@ -108,7 +109,7 @@ def list_doctors_by_department(request, department_name):
     serializer = DoctorSerializer(doctors, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+#عرض الاوقات المتاحه للدكتور
 @api_view(['GET'])
 def get_doctor_availabilities(request, doctor_id):
     try:

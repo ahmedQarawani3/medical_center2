@@ -48,8 +48,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework_simplejwt',  # لدعم JWT
-        'django_extensions',
-
 
 
     
@@ -180,10 +178,8 @@ STRIPE_TEST_SECRET_KEY='sk_test_51QajobHPJbUuZ7Goa0bjbzsoKFq7Z8sVQESWGZnK6G852uH
 GRAPH_MODELS = {
   'all_applications': True,
   'group_models': True,
-}
+
 
 GRAPH_MODELS = {
-  'app_labels': ["doctors", "patients", "billing"],
+  'app_labels': ["myapp1", "myapp2", "auth"],
 }
-
-
