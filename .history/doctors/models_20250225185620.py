@@ -31,7 +31,8 @@ class Department(models.Model):
 from django.db import models
 from accounts.models import User
 
-
+from doctors.models import Doctor
+Doctor.objects.all().delete()
 
 class Doctor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor')
@@ -42,7 +43,7 @@ class Doctor(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return self.name 
+        return self.name
 
 
 

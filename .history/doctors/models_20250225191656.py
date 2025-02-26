@@ -42,7 +42,7 @@ class Doctor(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return self.name 
+        return self.name
 
 
 

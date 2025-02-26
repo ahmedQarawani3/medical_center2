@@ -32,7 +32,6 @@ from django.db import models
 from accounts.models import User
 
 
-
 class Doctor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor')
     name = models.CharField(max_length=255)
@@ -42,7 +41,7 @@ class Doctor(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return self.name 
+        return self.name
 
 
 

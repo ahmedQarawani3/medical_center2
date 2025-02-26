@@ -8,7 +8,7 @@ class Department(models.Model):
         ('urology', 'بولية'),
         ('gastroenterology', 'هضمية'),
         ('nephrology', 'أمراض الكلى'),
-        ('general_surgery_and_diabetic_foot', ' الجراحة العامة والقدم السكري'),
+        ('general_surgery_and_diabetic_foot', 'الجراحة العامة والقدم السكري'),
         ('ent', 'أمراض الأذن والأنف والحنجرة'),
         ('endocrinology', 'أمراض الغدد'),
         ('nutrition', 'التغذية'),
@@ -20,29 +20,34 @@ class Department(models.Model):
     ]
 
     name = models.CharField(
-        max_length=100,
+        max_length=50,
         choices=DEPARTMENT_CHOICES,
+        unique=True
     )
+
+    class Meta:
+        verbose_name = "Department"
+        verbose_name_plural = "Departments"
 
     def __str__(self):
         return self.get_name_display()
 
 
-from django.db import models
-from accounts.models import User
-
-
-
 class Doctor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor', unique=True)
     name = models.CharField(max_length=255)
     specialty = models.CharField(max_length=255)
     years_of_experience = models.PositiveIntegerField(default=0)
     consultation_fee = models.DecimalField(max_digits=10, decimal_places=2)
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='doctors')
+
+    class Meta:
+        verbose_name = "Doctor"
+        verbose_name_plural = "Doctors"
 
     def __str__(self):
-        return self.name 
+        return self.name
+
 
 
 
